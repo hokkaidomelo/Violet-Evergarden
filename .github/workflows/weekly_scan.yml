@@ -1,10 +1,10 @@
-name: Weekly Evergreen Scan
+name: Evergreen Scan
 
+# On-demand only, no schedule. You decide when you're ready to invest, not a timer.
+# Trigger it manually from the Actions tab (or ask Claude to trigger it via `gh workflow run`)
+# right before you want a buy recommendation.
 on:
-  schedule:
-    # Every Monday 00:00 UTC = 08:00 Taipei time. Edit the cron if you want a different day/time.
-    - cron: "0 0 * * 1"
-  workflow_dispatch: {}   # lets you also trigger it manually from the GitHub Actions tab
+  workflow_dispatch: {}
 
 permissions:
   contents: write
