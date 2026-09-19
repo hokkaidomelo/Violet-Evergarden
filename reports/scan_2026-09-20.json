@@ -1,0 +1,147 @@
+{
+  "run_date": "2026-09-20",
+  "macro": {
+    "10y_yield": null,
+    "10y_yield_asof": "FRED_API_KEY not set - skipped",
+    "mode": "unknown (10Y not fetched)"
+  },
+  "fx": {
+    "usd_twd": 31.834145,
+    "asof": "Sat, 19 Sep 2026 00:02:31 +0000",
+    "us_stock_fx_score": 3,
+    "tw_stock_fx_score": 3
+  },
+  "candidates": [
+    {
+      "ticker": "MU",
+      "track": "B",
+      "price": 1015.8,
+      "52w_high": 1255.0,
+      "52w_low": 154.65,
+      "pullback_from_high_pct": 19.1,
+      "200ma": 640.14636,
+      "above_200ma": true,
+      "valuation": {
+        "ev_to_ebitda": 16.528,
+        "price_to_book": 11.385978,
+        "ev_to_revenue": 12.491
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": 13.685
+    },
+    {
+      "ticker": "AVGO",
+      "track": "B",
+      "price": 357.61,
+      "52w_high": 495.0,
+      "52w_low": 289.96,
+      "pullback_from_high_pct": 27.8,
+      "200ma": 369.0968,
+      "above_200ma": false,
+      "valuation": {
+        "ev_to_ebitda": 33.344,
+        "price_to_book": 17.125275,
+        "ev_to_revenue": 19.556
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": 2.153
+    },
+    {
+      "ticker": "NVDA",
+      "track": "B",
+      "price": 222.27,
+      "52w_high": 236.54,
+      "52w_low": 164.27,
+      "pullback_from_high_pct": 6.0,
+      "200ma": 198.37814,
+      "above_200ma": true,
+      "valuation": {
+        "ev_to_ebitda": 26.498,
+        "price_to_book": 23.438786,
+        "ev_to_revenue": 17.603
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": 1.278
+    },
+    {
+      "ticker": "GOOGL",
+      "track": "C",
+      "price": 349.54,
+      "52w_high": 408.61,
+      "52w_low": 235.84,
+      "pullback_from_high_pct": 14.5,
+      "200ma": 337.4959,
+      "above_200ma": true,
+      "valuation": {
+        "price_to_sales": 9.58775,
+        "ev_to_ebitda": 24.088
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": 2.94
+    },
+    {
+      "ticker": "META",
+      "track": "C",
+      "price": 665.75,
+      "52w_high": 785.73,
+      "52w_low": 520.26,
+      "pullback_from_high_pct": 15.3,
+      "200ma": 624.1585,
+      "above_200ma": true,
+      "valuation": {
+        "price_to_sales": 7.430557,
+        "ev_to_ebitda": 15.668
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": -0.134
+    },
+    {
+      "ticker": "AMZN",
+      "track": "C",
+      "price": 253.71,
+      "52w_high": 287.2,
+      "52w_low": 196.0,
+      "pullback_from_high_pct": 11.7,
+      "200ma": 240.30075,
+      "above_200ma": true,
+      "valuation": {
+        "price_to_sales": 3.5279956,
+        "ev_to_ebitda": 16.963
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": 2.423
+    },
+    {
+      "ticker": "NOW",
+      "track": "A",
+      "price": 135.47,
+      "52w_high": 194.726,
+      "52w_low": 81.24,
+      "pullback_from_high_pct": 30.4,
+      "200ma": 117.39166,
+      "above_200ma": true,
+      "valuation": {
+        "ev_to_revenue": 9.764,
+        "free_cashflow": 5149374976
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": -0.219
+    },
+    {
+      "ticker": "CRM",
+      "track": "A",
+      "price": 237.92,
+      "52w_high": 269.11,
+      "52w_low": 146.32,
+      "pullback_from_high_pct": 11.6,
+      "200ma": 201.5669,
+      "above_200ma": true,
+      "valuation": {
+        "ev_to_revenue": 5.161,
+        "free_cashflow": 17731874816
+      },
+      "eps_growth_note": "check info['earningsGrowth'] manually if needed",
+      "earnings_growth": 1.189
+    }
+  ]
+}
