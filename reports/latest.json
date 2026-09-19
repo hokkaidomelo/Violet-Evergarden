@@ -1,9 +1,9 @@
 {
-  "run_date": "2026-09-19",
+  "run_date": "2026-09-20",
   "macro": {
-    "10y_yield": 4.94,
-    "10y_yield_asof": "2026-09-17",
-    "mode": "tightening"
+    "10y_yield": null,
+    "10y_yield_asof": "FRED_API_KEY not set - skipped",
+    "mode": "unknown (10Y not fetched)"
   },
   "fx": {
     "usd_twd": 31.834145,
@@ -27,7 +27,14 @@
         "ev_to_revenue": 12.491
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": 13.685
+      "earnings_growth": 13.685,
+      "score": {
+        "valuation_pts": 22,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "AVGO",
@@ -44,7 +51,14 @@
         "ev_to_revenue": 19.556
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": 2.153
+      "earnings_growth": 2.153,
+      "score": {
+        "valuation_pts": 32,
+        "technical_pts": 0,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "NVDA",
@@ -61,7 +75,14 @@
         "ev_to_revenue": 17.603
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": 1.278
+      "earnings_growth": 1.278,
+      "score": {
+        "valuation_pts": 22,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "GOOGL",
@@ -77,7 +98,14 @@
         "ev_to_ebitda": 24.088
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": 2.94
+      "earnings_growth": 2.94,
+      "score": {
+        "valuation_pts": 22,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "META",
@@ -93,7 +121,14 @@
         "ev_to_ebitda": 15.668
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": -0.134
+      "earnings_growth": -0.134,
+      "score": {
+        "valuation_pts": 22,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "AMZN",
@@ -109,7 +144,14 @@
         "ev_to_ebitda": 16.963
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": 2.423
+      "earnings_growth": 2.423,
+      "score": {
+        "valuation_pts": 22,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "NOW",
@@ -125,7 +167,14 @@
         "free_cashflow": 5149374976
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": -0.219
+      "earnings_growth": -0.219,
+      "score": {
+        "valuation_pts": 32,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 45,
+        "objective_max": 45
+      }
     },
     {
       "ticker": "CRM",
@@ -141,7 +190,14 @@
         "free_cashflow": 17731874816
       },
       "eps_growth_note": "check info['earningsGrowth'] manually if needed",
-      "earnings_growth": 1.189
+      "earnings_growth": 1.189,
+      "score": {
+        "valuation_pts": 22,
+        "technical_pts": 10,
+        "fx_pts": 3,
+        "objective_total": 35,
+        "objective_max": 45
+      }
     }
   ]
 }

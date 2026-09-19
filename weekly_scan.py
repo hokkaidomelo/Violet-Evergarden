@@ -82,7 +82,45 @@ def macro_mode(ten_y):
     return "tightening" if ten_y > 4.5 else "neutral/easing"
 
 
-def scan_ticker(ticker, track):
+def valuation_score(pullback_pct, mode):
+    """Proxy for the 32-point '相對估值位置' dimension using pullback-from-high as
+    a stand-in for a true historical PR percentile (Rule D: yfinance has no clean
+    percentile field for free, so this is an ESTIMATE, flagged as such in the UI)."""
+    if pullback_pct is None:
+        return None
+    if mode == "tightening":
+        bands = [(30, 32), (10, 22), (0.01, 11), (-999, 0)]
+    else:
+        bands = [(20, 32), (5, 22), (0.01, 11), (-999, 0)]
+    for threshold, score in bands:
+        if pullback_pct >= threshold:
+            return score
+    return 0
+
+
+def technical_score(above_200ma):
+    if above_200ma is None:
+        return None
+    return 10 if above_200ma else 0
+
+
+def partial_score(c, mode, us_fx):
+    v = valuation_score(c.get("pullback_from_high_pct"), mode)
+    t = technical_score(c.get("above_200ma"))
+    parts = [x for x in (v, t) if x is not None]
+    if not parts:
+        return None
+    total = sum(parts) + (us_fx or 0)
+    return {
+        "valuation_pts": v,
+        "technical_pts": t,
+        "fx_pts": us_fx,
+        "objective_total": total,
+        "objective_max": 32 + 10 + 3,
+    }
+
+
+def scan_ticker(ticker, track, mode, us_fx):
     t = yf.Ticker(ticker)
     info = t.info or {}
     price = info.get("currentPrice") or info.get("regularMarketPrice")
@@ -110,7 +148,7 @@ def scan_ticker(ticker, track):
         valuation["ev_to_revenue"] = info.get("enterpriseToRevenue")
         valuation["free_cashflow"] = info.get("freeCashflow")
 
-    return {
+    c = {
         "ticker": ticker,
         "track": track,
         "price": price,
@@ -123,6 +161,32 @@ def scan_ticker(ticker, track):
         "eps_growth_note": "check info['earningsGrowth'] manually if needed",
         "earnings_growth": info.get("earningsGrowth"),
     }
+    c["score"] = partial_score(c, mode, us_fx)
+    return c
+
+
+def render_top3(report):
+    by_track = {"A": [], "B": [], "C": []}
+    for c in report["candidates"]:
+        if "error" in c or c.get("score") is None:
+            continue
+        by_track.setdefault(c["track"], []).append(c)
+
+    track_names = {"A": "A軌 · SaaS", "B": "B軌 · 硬體/半導體", "C": "C軌 · 生態系平台"}
+    blocks = []
+    for track in ("A", "B", "C"):
+        items = sorted(by_track.get(track, []), key=lambda c: c["score"]["objective_total"], reverse=True)[:3]
+        if not items:
+            blocks.append(f'<div class="tbl-row"><div class="tr-head">{track_names[track]}</div><div class="tr-body">本週無資料</div></div>')
+            continue
+        rows = "".join(
+            f'<div class="kv"><span class="k">#{i+1} {c["ticker"]}</span>'
+            f'<span class="v">{c["score"]["objective_total"]}/{c["score"]["objective_max"]}'
+            f' (估值{c["score"]["valuation_pts"]}+技術{c["score"]["technical_pts"]}+FX{c["score"]["fx_pts"]})</span></div>'
+            for i, c in enumerate(items)
+        )
+        blocks.append(f'<div class="tbl-row"><div class="tr-head">{track_names[track]}</div><div class="tr-body">{rows}</div></div>')
+    return "".join(blocks)
 
 
 def render_html(report):
@@ -171,6 +235,12 @@ def render_html(report):
 <body>
   <h1>Evergreen Engine · Weekly Objective Scan</h1>
   <div class="sub">run: {report['run_date']} &nbsp;|&nbsp; 10Y yield: {report['macro']['10y_yield']} ({report['macro']['mode']}) &nbsp;|&nbsp; USD/TWD: {report['fx']['usd_twd']}</div>
+
+  <h2 style="font-size:15px;">本週各軌前3名（僅客觀分數，滿分45＝估值32+技術10+FX3）</h2>
+  <p class="sub">動能/催化劑/內部人（另55分）未自動化，仍需人工搭配Claude覆核 — 這不是最終名次。</p>
+  {render_top3(report)}
+
+  <h2 style="font-size:15px; margin-top:24px;">完整原始資料</h2>
   {"".join(rows)}
   <p class="sub">Objective data only (price/valuation/macro/FX). Moat, catalyst and NRR judgment still need manual review with Claude.</p>
 </body></html>"""
@@ -204,7 +274,7 @@ def main():
 
     for ticker, track in CANDIDATES.items():
         try:
-            report["candidates"].append(scan_ticker(ticker, track))
+            report["candidates"].append(scan_ticker(ticker, track, report["macro"]["mode"], us_fx))
         except Exception as e:
             report["candidates"].append({"ticker": ticker, "error": str(e)})
 
