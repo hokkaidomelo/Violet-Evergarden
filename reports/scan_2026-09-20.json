@@ -34,7 +34,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "AVGO",
@@ -58,7 +60,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "NVDA",
@@ -82,7 +86,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "GOOGL",
@@ -105,7 +111,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "META",
@@ -128,7 +136,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "AMZN",
@@ -151,7 +161,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "NOW",
@@ -174,7 +186,9 @@
         "fx_pts": 3,
         "objective_total": 45,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     },
     {
       "ticker": "CRM",
@@ -197,7 +211,9 @@
         "fx_pts": 3,
         "objective_total": 35,
         "objective_max": 45
-      }
+      },
+      "subjective_score": null,
+      "full_score": null
     }
   ]
 }

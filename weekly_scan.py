@@ -1,29 +1,33 @@
 """
-Evergreen Engine - weekly objective data scan
---------------------------------------------
-Pulls only the OBJECTIVE, numeric parts of the framework (macro, FX, price/valuation,
-technical) from free data sources. Subjective parts (moat quality, catalysts, NRR from
-filings) are still meant to be judged by you + Claude afterward - this script does not
-replace the first-layer moat review.
+Evergreen Engine - weekly stock scan
+-------------------------------------
+Free part: macro (FRED), FX (open.er-api.com), price/valuation/technical (yfinance).
+Paid part (small, optional): momentum/catalyst/insider-selling judgment via a Claude
+Haiku API call with web search, since that requires reading and reasoning over news,
+not just pulling a number. Skips gracefully (falls back to the 45pt objective-only
+score) if ANTHROPIC_API_KEY is not set - the free path always still works.
 
-Free data sources used (no paid API keys, no LLM tokens spent):
-  - FRED (10Y treasury yield)        -> needs a free API key, register at https://fred.stlouisfed.org/docs/api/api_key.html
-  - open.er-api.com (USD/TWD FX)     -> free, no key
-  - yfinance (price, 52wk range, PE, EV/EBITDA, P/B, 200MA)  -> free, no key
+First-layer moat review (NRR, Network Effect, Switching Cost) is still NOT automated -
+that needs reading actual filings/qualitative judgment and stays a manual step with
+Claude in chat.
 
 Usage:
-  pip install yfinance requests
-  set FRED_API_KEY=xxxxxxxx        (Windows PowerShell: $env:FRED_API_KEY="xxxx")
+  pip install -r requirements.txt
+  set FRED_API_KEY=xxxxxxxx            (Windows PowerShell: $env:FRED_API_KEY="xxxx")
+  set ANTHROPIC_API_KEY=xxxxxxxx       (optional - omit to stay 100% free)
   python weekly_scan.py
 """
 
 import os
 import json
+import re
 import datetime
 import requests
 import yfinance as yf
 
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+LLM_MODEL = "claude-haiku-4-5-20251001"  # cheapest current model - keeps weekly cost tiny
 
 # Edit this list freely - one ticker per candidate you want scanned every week.
 CANDIDATES = {
@@ -120,6 +124,60 @@ def partial_score(c, mode, us_fx):
     }
 
 
+def llm_subjective_score(ticker, track):
+    """Uses Claude (with the web_search tool) to judge the 55 points the objective
+    data sources cannot answer: momentum (25), catalyst (20), insider selling (10).
+    Costs a small amount of real money (Haiku model + a few web searches) - this is
+    the one part of the framework that is NOT free. Returns None on any failure so
+    the rest of the report still works without it."""
+    if not ANTHROPIC_API_KEY:
+        return None
+    try:
+        import anthropic
+    except ImportError:
+        return None
+
+    prompt = f"""You are scoring {ticker} (track {track}, A=SaaS/B=hardware-semis/C=platform)
+for a monthly tech-stock screening framework. Search for this week's news and answer
+ONLY with a JSON object, no other text:
+
+{{
+  "momentum_pts": <int 0-25>,   // 25=beat estimates AND raised guidance, 15=in-line, 0=cut guidance
+  "catalyst_pts": <int 0-20>,   // 20=clear positive company/industry catalyst this week, 10=none notable, 0=negative catalyst
+  "insider_pts": <int 0 or 10>, // 0=large NON-prearranged insider selling (Form 4, not 10b5-1/Form 144 plan), else 10
+  "notes": "<one short sentence citing what you found>"
+}}"""
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    resp = client.messages.create(
+        model=LLM_MODEL,
+        max_tokens=600,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}],
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    text = "".join(block.text for block in resp.content if getattr(block, "type", "") == "text")
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return None
+
+    momentum = max(0, min(25, int(data.get("momentum_pts", 0))))
+    catalyst = max(0, min(20, int(data.get("catalyst_pts", 0))))
+    insider = 10 if int(data.get("insider_pts", 10)) >= 5 else 0
+    return {
+        "momentum_pts": momentum,
+        "catalyst_pts": catalyst,
+        "insider_pts": insider,
+        "subjective_total": momentum + catalyst + insider,
+        "subjective_max": 55,
+        "notes": data.get("notes", ""),
+    }
+
+
 def scan_ticker(ticker, track, mode, us_fx):
     t = yf.Ticker(ticker)
     info = t.info or {}
@@ -162,7 +220,47 @@ def scan_ticker(ticker, track, mode, us_fx):
         "earnings_growth": info.get("earningsGrowth"),
     }
     c["score"] = partial_score(c, mode, us_fx)
+
+    subj = llm_subjective_score(ticker, track)
+    c["subjective_score"] = subj
+    if subj is not None and c["score"] is not None:
+        c["full_score"] = {
+            "total": c["score"]["objective_total"] + subj["subjective_total"],
+            "max": c["score"]["objective_max"] + subj["subjective_max"],  # 100
+        }
+    else:
+        c["full_score"] = None
     return c
+
+
+def rank_key(c):
+    """Sort by the full 100-point score when the LLM subjective step succeeded,
+    otherwise fall back to the 45-point objective-only score."""
+    if c.get("full_score") is not None:
+        return c["full_score"]["total"]
+    return c["score"]["objective_total"]
+
+
+def format_score(c):
+    if c.get("full_score") is not None:
+        s, sub = c["score"], c["subjective_score"]
+        return (f'{c["full_score"]["total"]}/100 (估值{s["valuation_pts"]}+動能{sub["momentum_pts"]}'
+                f'+催化劑{sub["catalyst_pts"]}+技術{s["technical_pts"]}+內部人{sub["insider_pts"]}+FX{s["fx_pts"]})')
+    s = c["score"]
+    return f'{s["objective_total"]}/45 客觀分數（估值{s["valuation_pts"]}+技術{s["technical_pts"]}+FX{s["fx_pts"]}，動能/催化劑/內部人未取得）'
+
+
+def render_overall_top3(report):
+    valid = [c for c in report["candidates"] if "error" not in c and c.get("score") is not None]
+    top = sorted(valid, key=rank_key, reverse=True)[:3]
+    if not top:
+        return '<div class="tbl-row"><div class="tr-head">本週綜合前3名</div><div class="tr-body">本週無資料</div></div>'
+    rows = "".join(
+        f'<div class="kv"><span class="k">#{i+1} {c["ticker"]} (軌{c["track"]})</span>'
+        f'<span class="v">{format_score(c)}</span></div>'
+        for i, c in enumerate(top)
+    )
+    return f'<div class="tbl-row"><div class="tr-head">本週綜合前3名</div><div class="tr-body">{rows}</div></div>'
 
 
 def render_top3(report):
@@ -175,14 +273,12 @@ def render_top3(report):
     track_names = {"A": "A軌 · SaaS", "B": "B軌 · 硬體/半導體", "C": "C軌 · 生態系平台"}
     blocks = []
     for track in ("A", "B", "C"):
-        items = sorted(by_track.get(track, []), key=lambda c: c["score"]["objective_total"], reverse=True)[:3]
+        items = sorted(by_track.get(track, []), key=rank_key, reverse=True)[:3]
         if not items:
             blocks.append(f'<div class="tbl-row"><div class="tr-head">{track_names[track]}</div><div class="tr-body">本週無資料</div></div>')
             continue
         rows = "".join(
-            f'<div class="kv"><span class="k">#{i+1} {c["ticker"]}</span>'
-            f'<span class="v">{c["score"]["objective_total"]}/{c["score"]["objective_max"]}'
-            f' (估值{c["score"]["valuation_pts"]}+技術{c["score"]["technical_pts"]}+FX{c["score"]["fx_pts"]})</span></div>'
+            f'<div class="kv"><span class="k">#{i+1} {c["ticker"]}</span><span class="v">{format_score(c)}</span></div>'
             for i, c in enumerate(items)
         )
         blocks.append(f'<div class="tbl-row"><div class="tr-head">{track_names[track]}</div><div class="tr-body">{rows}</div></div>')
@@ -233,11 +329,13 @@ def render_html(report):
   .k{{ color:var(--ink-dim); }} .v{{ text-align:right; font-weight:500; }}
 </style></head>
 <body>
-  <h1>Evergreen Engine · Weekly Objective Scan</h1>
+  <h1>Evergreen Engine · Weekly Scan</h1>
   <div class="sub">run: {report['run_date']} &nbsp;|&nbsp; 10Y yield: {report['macro']['10y_yield']} ({report['macro']['mode']}) &nbsp;|&nbsp; USD/TWD: {report['fx']['usd_twd']}</div>
 
-  <h2 style="font-size:15px;">本週各軌前3名（僅客觀分數，滿分45＝估值32+技術10+FX3）</h2>
-  <p class="sub">動能/催化劑/內部人（另55分）未自動化，仍需人工搭配Claude覆核 — 這不是最終名次。</p>
+  <h2 style="font-size:15px;">本週綜合前3名（滿分100：估值32+動能25+催化劑20+技術10+內部人10+FX3）</h2>
+  {render_overall_top3(report)}
+
+  <h2 style="font-size:15px; margin-top:24px;">各軌前3名</h2>
   {render_top3(report)}
 
   <h2 style="font-size:15px; margin-top:24px;">完整原始資料</h2>
