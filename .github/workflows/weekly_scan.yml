@@ -22,10 +22,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run weekly scan
+      - name: Run scan
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python weekly_scan.py
 
       - name: Commit report + website back to repo
